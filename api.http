@@ -1,0 +1,46 @@
+### Health Check
+GET http://localhost:1323/
+
+### 1. Buat Order Baru
+POST http://localhost:1323/api/v1/orders
+Content-Type: application/json
+
+{
+  "customer_name": "Budi Santoso",
+  "customer_email": "budi@example.com",
+  "items": [
+    {
+      "product_id": "PROD-001",
+      "quantity": 2
+    },
+    {
+      "product_id": "PROD-002",
+      "quantity": 1
+    }
+  ]
+}
+
+### 2. Ambil Semua Daftar Order
+GET http://localhost:1323/api/v1/orders
+
+### 3. Ambil Detail Order (Ganti ORDER_ID sesuai response create)
+GET http://localhost:1323/api/v1/orders/ORD-CONTOH
+
+### 4. Batalkan Order
+PUT http://localhost:1323/api/v1/orders/ORD-CONTOH/cancel
+
+### 5. Simulasi Pembayaran Sukses
+POST http://localhost:1323/api/v1/orders/ORD-CONTOH/pay
+
+### 6. Simulasi Callback Webhook dari Payment Gateway
+POST http://localhost:1323/api/v1/payments/webhook
+Content-Type: application/json
+
+{
+  "order_id": "ORD-CONTOH",
+  "payment_id": "PAY-123456",
+  "transaction_status": "settlement",
+  "payment_method": "qris",
+  "gross_amount": 195000
+}
+
