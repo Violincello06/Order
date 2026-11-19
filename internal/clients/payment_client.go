@@ -36,9 +36,9 @@ func NewMockPaymentClient() *MockPaymentClient {
 }
 
 func (c *MockPaymentClient) CreateTransaction(ctx context.Context, req PaymentRequestDTO) (*PaymentResponseDTO, error) {
-	// Simulasi pembuatan pembayaran eksternal (contoh: Midtrans Snap / Xendit Invoice)
+	// Buat payment_id unik dan arahkan ke Sandbox Gateway simulator lokal yang aktif
 	paymentID := fmt.Sprintf("PAY-%d", time.Now().UnixNano())
-	redirectURL := fmt.Sprintf("https://checkout.sandbox-payment.com/pay/%s", paymentID)
+	redirectURL := fmt.Sprintf("/sandbox/pay/%s?order_id=%s&amount=%.0f&customer=%s", paymentID, req.OrderID, req.GrossAmount, req.CustomerName)
 
 	return &PaymentResponseDTO{
 		PaymentID:   paymentID,

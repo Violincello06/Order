@@ -1,29 +1,52 @@
-# Order Service API (Golang + Echo Framework)
+# Order Service API & Vue 3 Dashboard (Golang Echo + Vue 3 App.vue)
 
-Backend tahap awal untuk manajemen data pesanan (Order) yang dirancang siap terintegrasi dengan **Product API** dan **Payment Gateway API**.
+Backend dan Frontend terpadu untuk manajemen data pesanan (Order) yang dirancang siap terintegrasi dengan **Product API** dan **Payment Gateway API**.
+
+> **Catatan Teknologi:** Seluruh antarmuka visual dibuat dalam format komponen resmi Vue 3: **[App.vue](file:///c:/xampp/htdocs/Order/public/App.vue)** *(Single File Component: `<template>`, `<script setup>`, `<style>`)*. Backend menggunakan **100% Go (Golang Echo)**. **Tidak ada kode PHP (0% PHP code)**.
 
 ---
 
-## 🏛️ Struktur Arsitektur (Layered Architecture)
+## 🏛️ Struktur Arsitektur
 
 ```
 c:\xampp\htdocs\Order/
-├── internal/
-│   ├── models/              # Struktur data Order, OrderItem, & Request/Response DTO
-│   │   └── order.go
-│   ├── clients/             # Interface & Client integrasi Produk & Payment
-│   │   ├── product_client.go# Kontrak & simulasi integrasi Product Service (stok, harga)
-│   │   └── payment_client.go# Kontrak & simulasi integrasi Payment Gateway (Midtrans/Xendit)
-│   ├── repository/          # Layer penyimpanan data (In-Memory, siap diganti MySQL)
-│   │   └── order_repository.go
-│   ├── service/             # Business logic pemesanan, kalkulasi, & validasi
-│   │   └── order_service.go
-│   └── handler/             # HTTP Controllers (Echo Framework)
-│       └── order_handler.go
-├── main.go                  # Entry point & Dependency Injection
+├── public/
+│   ├── App.vue              # Komponen visual utama (Vue 3 Single File Component)
+│   └── docs.html            # Swagger UI Interactive API documentation
+├── src/
+│   ├── App.vue              # File SFC untuk workflow Vite/NPM
+│   └── main.js              # Entrypoint Vue
+├── package.json             # Konfigurasi Vue 3 & Vite
+├── vite.config.js           # Konfigurasi proxy Vite ke backend Go Echo
+├── openapi.json             # Spesifikasi OpenAPI 3.0 untuk tim frontend
+├── order_api_postman_collection.json # Postman collection v2.1
+├── internal/                # Layered Clean Architecture Backend (Go)
+├── main.go                  # Server Go Echo (Mount App.vue langsung tanpa index.html)
 ├── go.mod
 └── go.sum
 ```
+
+---
+
+## 🚀 Cara Menjalankan
+
+### Cara 1: Langsung via Server Go (Tanpa Build Step)
+Server Go Echo secara otomatis melayani dan merender [App.vue](file:///c:/xampp/htdocs/Order/public/App.vue) langsung di browser via browser SFC engine:
+```bash
+go run main.go
+```
+Buka browser:
+- **Tampilan Visual App.vue:** `http://localhost:1323/` atau `http://localhost:1323/dashboard`
+- **File Mentah App.vue:** `http://localhost:1323/App.vue`
+- **Interactive Swagger Docs:** `http://localhost:1323/docs`
+
+### Cara 2: Workflow Standar Vue Vite (Opsional untuk Tim Frontend)
+Jika tim frontend ingin menjalankan dengan hot-reload via Vite:
+```bash
+npm install
+npm run dev
+```
+*(Aplikasi Vue akan berjalan di `http://localhost:3000` dengan proxy otomatis ke backend Go Echo di port 1323).*
 
 ---
 

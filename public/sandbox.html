@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Gateway Sandbox Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4 antialiased">
+
+  <div id="paymentCard" class="max-w-md w-full bg-slate-800 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col">
+    
+    <!-- Header Sandbox Simulator -->
+    <div class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 p-6 text-white relative">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-white text-sm">
+            <i class="fa-solid fa-shield-halved"></i>
+          </span>
+          <span class="font-bold text-sm tracking-wider uppercase">Sandbox Gateway</span>
+        </div>
+        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Simulator Aktif
+        </span>
+      </div>
+
+      <p class="text-xs text-indigo-200">Total Tagihan:</p>
+      <h2 id="displayAmount" class="text-3xl font-extrabold tracking-tight mt-0.5">Memuat...</h2>
+
+      <div class="mt-3 pt-3 border-t border-indigo-500/30 flex justify-between text-xs text-indigo-100">
+        <span>Order: <strong id="displayOrderID" class="font-mono">-</strong></span>
+        <span>Customer: <strong id="displayCustomer">-</strong></span>
+      </div>
+    </div>
+
+    <!-- Payment Methods Tab -->
+    <div class="p-6 space-y-5 flex-1">
+      
+      <!-- Method Selector -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pilih Metode Pembayaran</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="switchTab('qris')" id="tab-qris"
+            class="method-tab p-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 text-xs font-bold flex flex-col items-center gap-1 transition">
+            <i class="fa-solid fa-qrcode text-base"></i>
+            <span>QRIS</span>
+          </button>
+          <button type="button" onclick="switchTab('va')" id="tab-va"
+            class="method-tab p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 text-xs font-bold flex flex-col items-center gap-1 hover:border-slate-600 transition">
+            <i class="fa-solid fa-building-columns text-base"></i>
+            <span>Virtual Acc</span>
+          </button>
+          <button type="button" onclick="switchTab('card')" id="tab-card"
+            class="method-tab p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 text-xs font-bold flex flex-col items-center gap-1 hover:border-slate-600 transition">
+            <i class="fa-regular fa-credit-card text-base"></i>
+            <span>Kartu Kredit</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content 1: QRIS -->
+      <div id="content-qris" class="tab-pane space-y-3 text-center">
+        <div class="p-4 bg-white rounded-2xl inline-block shadow-inner">
+          <svg class="w-40 h-40 text-slate-900 mx-auto" viewBox="0 0 100 100" fill="currentColor">
+            <rect width="100" height="100" fill="white"/>
+            <path d="M10 10h30v30h-30z M15 15v20h20v-20z M20 20h10v10h-10z" />
+            <path d="M60 10h30v30h-30z M65 15v20h20v-20z M70 20h10v10h-10z" />
+            <path d="M10 60h30v30h-30z M15 65v20h20v-20z M20 70h10v10h-10z" />
+            <circle cx="50" cy="20" r="3" />
+            <circle cx="50" cy="35" r="3" />
+            <circle cx="75" cy="50" r="3" />
+            <circle cx="50" cy="65" r="3" />
+            <circle cx="65" cy="75" r="3" />
+            <circle cx="80" cy="80" r="3" />
+            <circle cx="50" cy="80" r="3" />
+            <rect x="45" y="45" width="10" height="10" fill="#4f46e5"/>
+          </svg>
+        </div>
+        <p class="text-xs text-slate-400">
+          Mendukung semua e-wallet: <strong>GoPay, OVO, DANA, ShopeePay, BCA</strong>
+        </p>
+      </div>
+
+      <!-- Tab Content 2: VA -->
+      <div id="content-va" class="tab-pane hidden space-y-3">
+        <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-700 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">Nomor Virtual Account BCA:</span>
+            <span class="text-indigo-400 font-bold">Otomatis Terverifikasi</span>
+          </div>
+          <div class="flex items-center justify-between bg-slate-800 p-2.5 rounded-lg border border-slate-700">
+            <span class="font-mono font-bold text-white tracking-widest text-sm">8801 2948 1029 4810</span>
+            <button onclick="alert('Nomor VA disalin!')" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">Salin</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 3: Card -->
+      <div id="content-card" class="tab-pane hidden space-y-3">
+        <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-700 space-y-2">
+          <div class="text-xs space-y-1.5">
+            <label class="text-slate-400 block">Nomor Kartu Uji Coba</label>
+            <input type="text" readonly value="4111 •••• •••• 1111" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 font-mono text-white text-xs">
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="text-slate-400 block mb-1">Berlaku</label>
+              <input type="text" readonly value="12/28" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 font-mono text-white text-xs">
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1">CVV</label>
+              <input type="text" readonly value="123" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 font-mono text-white text-xs">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulator Action Buttons -->
+      <div class="pt-2 space-y-2.5">
+        <button id="btnPaySuccess" onclick="triggerPayment('settlement')"
+          class="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-check text-base"></i>
+          <span>Simulasikan Pembayaran Sukses (PAID)</span>
+        </button>
+
+        <button id="btnPayFailed" onclick="triggerPayment('failed')"
+          class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-rose-950/40 text-rose-400 hover:text-rose-300 border border-slate-700 hover:border-rose-800 font-semibold text-xs transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span>Simulasikan Gagal / Kadaluarsa (CANCELLED)</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Footer Back to Merchant -->
+    <div class="p-4 bg-slate-900 border-t border-slate-800 text-center">
+      <a href="/" class="text-xs text-slate-400 hover:text-indigo-400 transition flex items-center justify-center gap-1">
+        <i class="fa-solid fa-arrow-left text-[10px]"></i> Kembali ke Dashboard Order Merchant
+      </a>
+    </div>
+
+  </div>
+
+  <div id="resultCard" class="hidden max-w-md w-full bg-slate-800 p-8 rounded-3xl border text-center space-y-4 shadow-2xl">
+    <div id="resultIcon" class="w-16 h-16 rounded-full text-3xl flex items-center justify-center mx-auto border"></div>
+    <h2 id="resultTitle" class="text-2xl font-bold text-white"></h2>
+    <p id="resultDesc" class="text-xs text-slate-300"></p>
+    <div class="pt-4">
+      <a href="/" class="block w-full py-3 rounded-xl font-bold text-sm text-white transition" id="resultBtn">
+        Kembali ke Dashboard Order
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const pathParts = window.location.pathname.split('/');
+    const paymentID = pathParts[pathParts.length - 1] || 'PAY-' + Date.now();
+    const orderID = urlParams.get('order_id') || 'ORD-SAMPLE';
+    const rawAmount = parseFloat(urlParams.get('amount')) || 195000;
+    const customer = urlParams.get('customer') || 'Customer';
+    let selectedMethod = 'qris';
+
+    // Format Rupiah
+    const formatRupiah = (num) => {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+    };
+
+    // Set UI Details
+    document.getElementById('displayAmount').innerText = formatRupiah(rawAmount);
+    document.getElementById('displayOrderID').innerText = orderID;
+    document.getElementById('displayCustomer').innerText = customer;
+
+    function switchTab(tab) {
+      selectedMethod = tab;
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.method-tab').forEach(el => {
+        el.className = 'method-tab p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 text-xs font-bold flex flex-col items-center gap-1 hover:border-slate-600 transition';
+      });
+
+      document.getElementById('content-' + tab).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + tab);
+      activeBtn.className = 'method-tab p-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 text-xs font-bold flex flex-col items-center gap-1 transition';
+    }
+
+    async function triggerPayment(status) {
+      const btnSuccess = document.getElementById('btnPaySuccess');
+      const btnFailed = document.getElementById('btnPayFailed');
+      btnSuccess.disabled = true;
+      btnFailed.disabled = true;
+
+      btnSuccess.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memproses Webhook...';
+
+      try {
+        const payload = {
+          order_id: orderID,
+          payment_id: paymentID,
+          transaction_status: status,
+          payment_method: selectedMethod,
+          gross_amount: rawAmount
+        };
+
+        const res = await fetch('/api/v1/payments/webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Gagal memanggil webhook');
+
+        document.getElementById('paymentCard').classList.add('hidden');
+        const resultCard = document.getElementById('resultCard');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDesc = document.getElementById('resultDesc');
+        const resultBtn = document.getElementById('resultBtn');
+
+        resultCard.classList.remove('hidden');
+
+        if (status === 'settlement') {
+          resultCard.className = 'max-w-md w-full bg-slate-800 p-8 rounded-3xl border border-emerald-500/40 text-center space-y-4 shadow-2xl';
+          resultIcon.className = 'w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 text-3xl flex items-center justify-center mx-auto border border-emerald-500/30';
+          resultIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+          resultTitle.innerText = 'Pembayaran Berhasil!';
+          resultDesc.innerHTML = 'Webhook notifikasi <strong class="text-emerald-400">settlement</strong> berhasil diterima oleh backend Go Echo. Status order <span class="font-mono text-white font-bold">' + orderID + '</span> kini telah menjadi <strong class="text-emerald-400">PAID</strong>.';
+          resultBtn.className = 'block w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition';
+        } else {
+          resultCard.className = 'max-w-md w-full bg-slate-800 p-8 rounded-3xl border border-rose-500/40 text-center space-y-4 shadow-2xl';
+          resultIcon.className = 'w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 text-3xl flex items-center justify-center mx-auto border border-rose-500/30';
+          resultIcon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+          resultTitle.innerText = 'Pembayaran Dibatalkan';
+          resultDesc.innerHTML = 'Status transaksi: <strong class="text-rose-400">' + status + '</strong>. Status order kini telah menjadi <strong class="text-rose-400">CANCELLED</strong>.';
+          resultBtn.className = 'block w-full py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-sm transition';
+        }
+      } catch (err) {
+        alert('Gagal mengirim status webhook: ' + err.message);
+        btnSuccess.disabled = false;
+        btnFailed.disabled = false;
+        btnSuccess.innerHTML = '<i class="fa-solid fa-circle-check text-base"></i> Simulasikan Pembayaran Sukses (PAID)';
+      }
+    }
+  </script>
+</body>
+</html>

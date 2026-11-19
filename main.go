@@ -13,6 +13,41 @@ import (
 	"order/internal/service"
 )
 
+// Dynamic loader in-memory untuk me-mount App.vue langsung tanpa perlu file index.html di disk
+const vueMountPage = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Management | App.vue</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue3-sfc-loader/dist/vue3-sfc-loader.js"></script>
+</head>
+<body class="bg-slate-50 m-0 p-0">
+  <div id="app"></div>
+  <script>
+    const { loadModule } = window['vue3-sfc-loader'];
+    const options = {
+      moduleCache: { vue: Vue },
+      async getFile(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Gagal membaca ' + url + ': ' + res.statusText);
+        return { getContentData: asBinary => asBinary ? res.arrayBuffer() : res.text() };
+      },
+      addStyle(textContent) {
+        const style = document.createElement('style');
+        style.textContent = textContent;
+        const ref = document.head.getElementsByTagName('style')[0] || null;
+        document.head.insertBefore(style, ref);
+      },
+    };
+    Vue.createApp(Vue.defineAsyncComponent(() => loadModule('/public/App.vue', options))).mount('#app');
+  </script>
+</body>
+</html>`
+
 func main() {
 	// 1. Inisialisasi Echo instance
 	e := echo.New()
@@ -43,13 +78,21 @@ func main() {
 
 	// - HTTP Handlers
 	orderHandler := handler.NewOrderHandler(orderService)
+	sandboxHandler := handler.NewSandboxHandler()
 
-	// 4. Layani Web UI Frontend & API Documentation
-	e.File("/", "public/index.html")
-	e.File("/dashboard", "public/index.html")
+	// 4. Layani Tampilan App.vue (Tanpa file index.html di disk)
+	renderAppVue := func(c echo.Context) error {
+		return c.HTML(http.StatusOK, vueMountPage)
+	}
+	e.GET("/", renderAppVue)
+	e.GET("/dashboard", renderAppVue)
+	e.File("/App.vue", "public/App.vue")
 	e.File("/docs", "public/docs.html")
 	e.File("/openapi.json", "openapi.json")
 	e.Static("/public", "public")
+
+	// Layani Sandbox Payment Gateway Simulator Lokal
+	sandboxHandler.RegisterRoutes(e)
 
 	// Health check & Info API
 	e.GET("/api/info", func(c echo.Context) error {
