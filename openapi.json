@@ -381,11 +381,12 @@
       "OrderItem": {
         "type": "object",
         "properties": {
-          "product_id": { "type": "string", "example": "PROD-001" },
-          "product_name": { "type": "string", "example": "Kopi Arabika 250g" },
-          "price": { "type": "number", "example": 75000 },
-          "quantity": { "type": "integer", "example": 2 },
-          "subtotal": { "type": "number", "example": 150000 }
+          "product_id": { "type": "string", "example": "1" },
+          "product_name": { "type": "string", "example": "Jaket Denim Levi's Vintage 90s Size L" },
+          "price": { "type": "number", "example": 450000 },
+          "quantity": { "type": "integer", "example": 1 },
+          "subtotal": { "type": "number", "example": 450000 },
+          "image_url": { "type": "string", "example": "https://images.unsplash.com/photo-1576995853123-5a10305d93c0" }
         }
       },
       "Order": {

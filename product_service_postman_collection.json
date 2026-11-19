@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "Pre-Loved Product Microservice API",
+    "description": "Koleksi request resmi untuk Pre-Loved Product Service. Mendukung integrasi Tim Frontend (Katalog & Dashboard Penjual) serta Tim Order Service (Validasi Keranjang & Locking Transaksi Real-time).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string",
+      "description": "Base URL service lokal (port 3001) atau endpoint reverse proxy / API Gateway"
+    },
+    {
+      "key": "internalSecret",
+      "value": "CHANGE_ME_LOCAL_DUMMY_SECRET_2026",
+      "type": "string",
+      "description": "SECRET DUMMY UNTUK TESTING LOKAL. Di lingkungan production, nilai rahasia ini hanya disimpan di server Order Service dan disuntikkan via komunikasi internal server-to-server. Dilarang keras diekspos ke publik/klien."
+    },
+    {
+      "key": "sellerId",
+      "value": "1",
+      "type": "string",
+      "description": "ID Seller untuk simulasi testing lokal langsung ke port 3001 (Di production, ini otomatis disuntikkan oleh API Gateway dari token JWT)"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health & Root",
+      "item": [
+        {
+          "name": "Root Welcome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Health Check (DB status)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Products",
+      "item": [
+        {
+          "name": "Get All Products (Search, Filter & Pagination)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=1&limit=10&search=Levi&condition=lightly_used&status=available&sort=newest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Get Products by Multiple IDs (Cart Validation)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?ids=1,2,3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Internal - Order Service Only (Do Not Call from Frontend)",
+      "item": [
+        {
+          "name": "Order Service: Booking (available -> reserved)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-internal-secret",
+                "value": "{{internalSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"reserved\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Order Service: Finalize Paid (reserved -> sold)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-internal-secret",
+                "value": "{{internalSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"sold\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Order Service: Rollback Expired (reserved -> available)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-internal-secret",
+                "value": "{{internalSecret}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"available\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1", "status"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -92,6 +92,27 @@ Buka browser Anda dan akses:
 
 ---
 
+## 🗄️ Database MySQL (XAMPP)
+
+Seluruh skema database dan seed data telah disiapkan di folder `database/` dan sudah di-import ke MySQL XAMPP:
+
+| Nama Database | Skema File | Tabel | Deskripsi |
+| :--- | :--- | :--- | :--- |
+| **`order_db`** | `database/order_schema.sql` | `orders`, `order_items` | Database utama Order Service untuk menyimpan data pesanan & item transaksi. |
+| **`preloved_product`** | `database/product_schema.sql` | `categories`, `products`, `product_images` | Database Product Microservice (port 3001) yang menyimpan katalog produk Pre-Loved. |
+
+### Konfigurasi Koneksi Database (`.env`):
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=order_db
+```
+*Sistem dilengkapi fitur **Auto-Detect**: jika MySQL aktif, data tersimpan permanen di MySQL; jika MySQL mati, sistem otomatis fallback ke In-Memory tanpa membuat server crash.*
+
+---
+
 ## 📦 File Spesifikasi API untuk Diberikan ke Tim Lain
 
 Di dalam root project ini telah disediakan 2 format standar industri:
@@ -122,7 +143,7 @@ Di dalam root project ini telah disediakan 2 format standar industri:
 ### 2. Buat Order Baru (Create Order)
 - **Method:** `POST`
 - **URL:** `http://localhost:1323/api/v1/orders`
-- **Header:** `Content-Type: application/json`
+- **Header:** `Content-Type: application/json`, `X-API-Key: ord_fe_live_9a7b6c5d4e3f2a1b9876543210fedcba`
 - **Body:**
 ```json
 {
@@ -130,17 +151,13 @@ Di dalam root project ini telah disediakan 2 format standar industri:
   "customer_email": "budi@example.com",
   "items": [
     {
-      "product_id": "PROD-001",
-      "quantity": 2
-    },
-    {
-      "product_id": "PROD-002",
+      "product_id": "1",
       "quantity": 1
     }
   ]
 }
 ```
-*(Catatan: Produk dummy bawaan: `PROD-001` (Kopi Arabika, Rp75.000), `PROD-002` (Syrup Vanilla, Rp45.000), `PROD-003` (Paper Cup, Rp35.000))*
+*(Catatan: Produk Pre-Loved bawaan: `1` (Jaket Denim Levi's Vintage 90s, Rp450.000), `2` (Sepatu Sneakers Converse 70s, Rp350.000), `3` (Kamera Analog Vintage 35mm, Rp750.000))*
 
 ---
 

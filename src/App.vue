@@ -14,7 +14,7 @@
               <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">App.vue (SFC)</span>
               <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Go Echo (Non-PHP)</span>
             </div>
-            <span class="text-xs text-slate-500 font-medium">Terkoneksi ke Product API & Payment Gateway</span>
+            <span class="text-xs text-slate-500 font-medium">Terkoneksi ke Pre-Loved Product & Payment Gateway</span>
           </div>
         </div>
 
@@ -95,7 +95,7 @@
           <div class="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
               <h2 class="text-base font-bold text-slate-900">Buat Orderan Baru</h2>
-              <p class="text-xs text-slate-500">Kalkulasi dinamis via App.vue & validasi ke Go Echo</p>
+              <p class="text-xs text-slate-500">Terkoneksi langsung ke Pre-Loved Product Service (Port 3001)</p>
             </div>
             <span class="text-emerald-700 text-xs font-bold bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
               <i class="fa-solid fa-bolt"></i> Vue Reactive
@@ -115,23 +115,31 @@
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
             </div>
 
-            <!-- List Produk (v-for) -->
+            <!-- List Produk Pre-Loved (v-for) -->
             <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Pilih Produk (Katalog Produk)</label>
+              <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Pilih Produk Pre-Loved (Katalog)</label>
               <div class="space-y-2.5">
                 <div v-for="product in products" :key="product.id"
-                  class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <span class="text-xs font-bold text-slate-800 block">{{ product.name }}</span>
-                    <span class="text-xs text-slate-500">
+                  class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3 hover:border-emerald-300 transition">
+                  <!-- Product Image Thumbnail -->
+                  <img :src="product.image_url" :alt="product.name"
+                    class="w-14 h-14 object-cover rounded-xl border border-slate-200 shadow-sm flex-shrink-0 bg-white" />
+
+                  <div class="flex-1 min-w-0">
+                    <span class="text-xs font-bold text-slate-800 block truncate" :title="product.name">{{ product.name }}</span>
+                    <span class="text-xs text-slate-500 block">
                       {{ formatRupiah(product.price) }} &bull; 
-                      <span class="text-emerald-600 font-medium">Stok: {{ product.stock }}</span>
+                      <span class="text-indigo-600 font-medium capitalize">{{ product.condition || 'Pre-loved' }}</span>
+                    </span>
+                    <span :class="['text-[11px] font-semibold', product.stock > 0 ? 'text-emerald-600' : 'text-rose-500']">
+                      {{ product.stock > 0 ? 'Tersedia (Stok: ' + product.stock + ')' : 'Sudah Dipesan / Habis' }}
                     </span>
                   </div>
-                  <div class="flex items-center space-x-2">
+
+                  <div class="flex items-center space-x-1.5 flex-shrink-0">
                     <label class="text-xs text-slate-400">Qty:</label>
                     <input type="number" min="0" :max="product.stock" v-model.number="form.items[product.id]"
-                      class="w-16 px-2 py-1.5 rounded-lg border border-slate-200 text-sm text-center font-bold bg-white focus:outline-none focus:border-emerald-500">
+                      class="w-14 px-2 py-1.5 rounded-lg border border-slate-200 text-sm text-center font-bold bg-white focus:outline-none focus:border-emerald-500">
                   </div>
                 </div>
               </div>
@@ -216,10 +224,13 @@
               </div>
 
               <!-- Items Break-down -->
-              <div class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg space-y-1">
-                <div v-for="item in order.items" :key="item.product_id" class="flex justify-between">
-                  <span>{{ item.product_name }} <span class="text-slate-400">&times; {{ item.quantity }}</span></span>
-                  <span class="font-medium text-slate-700">{{ formatRupiah(item.subtotal) }}</span>
+              <div class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg space-y-1.5">
+                <div v-for="item in order.items" :key="item.product_id" class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <img v-if="item.image_url" :src="item.image_url" class="w-7 h-7 object-cover rounded border border-slate-200 flex-shrink-0" />
+                    <span class="truncate">{{ item.product_name }} <span class="text-slate-400">&times; {{ item.quantity }}</span></span>
+                  </div>
+                  <span class="font-medium text-slate-700 flex-shrink-0">{{ formatRupiah(item.subtotal) }}</span>
                 </div>
               </div>
 
@@ -291,9 +302,12 @@
           <div>
             <span class="text-xs font-bold text-slate-700 uppercase block mb-1.5">Item Belanja:</span>
             <div class="space-y-1.5 text-xs">
-              <div v-for="item in selectedOrder.items" :key="item.product_id" class="flex justify-between py-1 border-b border-slate-100">
-                <span>{{ item.product_name }} <span class="text-slate-400">({{ item.quantity }} &times; {{ formatRupiah(item.price) }})</span></span>
-                <span class="font-semibold text-slate-800">{{ formatRupiah(item.subtotal) }}</span>
+              <div v-for="item in selectedOrder.items" :key="item.product_id" class="flex items-center justify-between py-1.5 border-b border-slate-100 gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <img v-if="item.image_url" :src="item.image_url" class="w-8 h-8 object-cover rounded border border-slate-200 flex-shrink-0" />
+                  <span class="truncate">{{ item.product_name }} <span class="text-slate-400">({{ item.quantity }} &times; {{ formatRupiah(item.price) }})</span></span>
+                </div>
+                <span class="font-semibold text-slate-800 flex-shrink-0">{{ formatRupiah(item.subtotal) }}</span>
               </div>
               <div class="flex justify-between pt-2 text-sm font-bold text-slate-900">
                 <span>Total Tagihan:</span>
@@ -353,11 +367,32 @@ const toast = reactive({
   type: 'success'
 });
 
-// Katalog Produk Bawaan
+// Katalog Produk Pre-Loved (Sesuai Pre-Loved Product Service)
 const products = ref([
-  { id: 'PROD-001', name: 'Kopi Arabika 250g', price: 75000, stock: 50 },
-  { id: 'PROD-002', name: 'Syrup Vanilla 500ml', price: 45000, stock: 20 },
-  { id: 'PROD-003', name: 'Paper Cup 12oz (Pack of 50)', price: 35000, stock: 100 }
+  {
+    id: '1',
+    name: "Jaket Denim Levi's Vintage 90s Size L",
+    price: 450000,
+    stock: 1,
+    condition: "lightly_used",
+    image_url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&auto=format&fit=crop&q=80"
+  },
+  {
+    id: '2',
+    name: "Sepatu Sneakers Converse 70s Chuck Taylor",
+    price: 350000,
+    stock: 1,
+    condition: "like_new",
+    image_url: "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&auto=format&fit=crop&q=80"
+  },
+  {
+    id: '3',
+    name: "Kamera Analog Vintage 35mm Terawat",
+    price: 750000,
+    stock: 1,
+    condition: "well_used",
+    image_url: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&auto=format&fit=crop&q=80"
+  }
 ]);
 
 // Form State
@@ -365,9 +400,9 @@ const form = reactive({
   customer_name: '',
   customer_email: '',
   items: {
-    'PROD-001': 1,
-    'PROD-002': 0,
-    'PROD-003': 0
+    '1': 1,
+    '2': 0,
+    '3': 0
   }
 });
 
@@ -450,14 +485,20 @@ const fetchOrders = async () => {
           id: "ORD-20261119-DEMO01",
           customer_name: "Ahmad Dahlan",
           customer_email: "ahmad@example.com",
-          total_amount: 195000,
+          total_amount: 450000,
           status: "PENDING",
           payment_id: "PAY-DEMO-991",
-          payment_url: "/sandbox/pay/PAY-DEMO-991?order_id=ORD-20261119-DEMO01&amount=195000&customer=Ahmad%20Dahlan",
+          payment_url: "/sandbox/pay/PAY-DEMO-991?order_id=ORD-20261119-DEMO01&amount=450000&customer=Ahmad%20Dahlan",
           created_at: new Date().toISOString(),
           items: [
-            { product_id: "PROD-001", product_name: "Kopi Arabika 250g", price: 75000, quantity: 2, subtotal: 150000 },
-            { product_id: "PROD-002", product_name: "Syrup Vanilla 500ml", price: 45000, quantity: 1, subtotal: 45000 }
+            {
+              product_id: "1",
+              product_name: "Jaket Denim Levi's Vintage 90s Size L",
+              price: 450000,
+              quantity: 1,
+              subtotal: 450000,
+              image_url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&auto=format&fit=crop&q=80"
+            }
           ]
         }
       ];
@@ -502,9 +543,9 @@ const handleCreateOrder = async () => {
     triggerToast('Order berhasil dibuat! Menunggu pembayaran.');
     form.customer_name = '';
     form.customer_email = '';
-    form.items['PROD-001'] = 1;
-    form.items['PROD-002'] = 0;
-    form.items['PROD-003'] = 0;
+    form.items['1'] = 1;
+    form.items['2'] = 0;
+    form.items['3'] = 0;
     await fetchOrders();
   } catch (err) {
     triggerToast(err.message, 'error');

@@ -91,6 +91,7 @@ func (s *orderService) CreateOrder(ctx context.Context, req models.CreateOrderRe
 			Price:       product.Price,
 			Quantity:    itemReq.Quantity,
 			Subtotal:    subtotal,
+			ImageURL:    product.ImageURL,
 		})
 	}
 
@@ -153,6 +154,11 @@ func (s *orderService) CancelOrder(ctx context.Context, id string) (*models.Orde
 	order.PaymentStatus = "CANCELLED"
 	order.UpdatedAt = time.Now()
 
+	// Rollback status barang di Product Service (reserved -> available)
+	for _, item := range order.Items {
+		_ = s.productClient.RollbackStock(ctx, item.ProductID)
+	}
+
 	if err := s.repo.Update(ctx, order); err != nil {
 		return nil, err
 	}
@@ -170,12 +176,20 @@ func (s *orderService) ProcessPaymentWebhook(ctx context.Context, webhook models
 	order.PaymentStatus = strings.ToUpper(webhook.TransactionStatus)
 	order.UpdatedAt = time.Now()
 
-	// Update status order berdasarkan status transaksi payment gateway
+	// Update status order & sinkronisasi status barang ke Product Service
 	switch strings.ToLower(webhook.TransactionStatus) {
 	case "settlement", "success", "capture":
 		order.Status = models.StatusPaid
+		// Ubah status produk dari 'reserved' menjadi 'sold' di Product Service
+		for _, item := range order.Items {
+			_ = s.productClient.FinalizeSold(ctx, item.ProductID)
+		}
 	case "deny", "cancel", "expire", "failed":
 		order.Status = models.StatusCancelled
+		// Rollback status produk dari 'reserved' kembali ke 'available'
+		for _, item := range order.Items {
+			_ = s.productClient.RollbackStock(ctx, item.ProductID)
+		}
 	}
 
 	return s.repo.Update(ctx, order)

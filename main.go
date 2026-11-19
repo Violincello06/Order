@@ -1,7 +1,9 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -64,11 +66,30 @@ func main() {
 	}))
 
 	// 3. Inisialisasi Komponen & Integrasi (Dependency Injection)
-	// - Repositori Penyimpanan Order (In-memory, siap ditukar ke MySQL/GORM)
-	orderRepo := repository.NewMemoryOrderRepository()
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "127.0.0.1"
+	}
+	dbPort := os.Getenv("DB_PORT")
+	if dbPort == "" {
+		dbPort = "3306"
+	}
+	dbUser := os.Getenv("DB_USER")
+	if dbUser == "" {
+		dbUser = "root"
+	}
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	if dbName == "" {
+		dbName = "order_db"
+	}
 
-	// - Client Integrasi API Produk (mock / siap diganti real HTTP client)
-	productClient := clients.NewMockProductClient()
+	// - Repositori Penyimpanan Order (Auto-detect MySQL XAMPP -> fallback In-Memory jika MySQL belum jalan)
+	orderRepo, repoSource := repository.NewOrderRepositoryAutoDetect(dbUser, dbPassword, dbHost, dbPort, dbName)
+	log.Printf("[DATABASE] Order Repository aktif menggunakan: %s\n", repoSource)
+
+	// - Client Integrasi API Produk (Terhubung ke http://localhost:3001 Pre-Loved Product Service)
+	productClient := clients.NewHttpProductClient()
 
 	// - Client Integrasi API Payment (mock / siap diganti Midtrans, Xendit, Stripe, dll)
 	paymentClient := clients.NewMockPaymentClient()
