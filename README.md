@@ -28,6 +28,19 @@ c:\xampp\htdocs\Order/
 
 ---
 
+## 🔑 Daftar Key Token untuk Setiap Tim
+
+Semua endpoint kini telah diamankan dengan middleware autentikasi token. Konfigurasi tersimpan di file **[.env](file:///c:/xampp/htdocs/Order/.env)**:
+
+| Penerima / Tim | Nama Header | Nilai Key Token | Fungsi |
+| :--- | :--- | :--- | :--- |
+| **🎨 Tim Frontend** | `X-API-Key` *(atau `Bearer`)* | `ord_fe_live_9a7b6c5d4e3f2a1b9876543210fedcba` | Untuk memanggil API order (`/api/v1/orders`) dari web/mobile client. |
+| **💳 Tim Payment Gateway** | `X-Webhook-Token` | `whsec_pay_8841a0e9b62c451fbcda332156890abc` | Untuk memvalidasi notifikasi webhook pembayaran (`/api/v1/payments/webhook`). |
+| **📦 Tim Produk** | `X-Product-Key` | `prd_sec_int_771f2e9b0a3c4d5e1234567890abcdef` | Untuk autentikasi komunikasi internal service-to-service antara Order & Produk. |
+| **👑 Master Internal** | `X-API-Key` | `ord_master_admin_secret_99887766554433221100` | Token admin dengan akses penuh ke seluruh endpoint. |
+
+---
+
 ## 🚀 Cara Menjalankan
 
 ### Cara 1: Langsung via Server Go (Tanpa Build Step)
@@ -47,6 +60,19 @@ npm install
 npm run dev
 ```
 *(Aplikasi Vue akan berjalan di `http://localhost:3000` dengan proxy otomatis ke backend Go Echo di port 1323).*
+
+---
+
+## 🔑 Daftar Key Token untuk Setiap Tim
+
+Semua endpoint kini telah diamankan dengan middleware autentikasi token. Konfigurasi tersimpan di file **[.env](file:///c:/xampp/htdocs/Order/.env)**:
+
+| Penerima / Tim | Nama Header | Nilai Key Token | Fungsi |
+| :--- | :--- | :--- | :--- |
+| **🎨 Tim Frontend** | `X-API-Key` *(atau `Bearer`)* | `ord_fe_live_9a7b6c5d4e3f2a1b9876543210fedcba` | Untuk memanggil API order (`/api/v1/orders`) dari web/mobile client. |
+| **💳 Tim Payment Gateway** | `X-Webhook-Token` | `whsec_pay_8841a0e9b62c451fbcda332156890abc` | Untuk memvalidasi notifikasi webhook pembayaran (`/api/v1/payments/webhook`). |
+| **📦 Tim Produk** | `X-Product-Key` | `prd_sec_int_771f2e9b0a3c4d5e1234567890abcdef` | Untuk autentikasi komunikasi internal service-to-service antara Order & Produk. |
+| **👑 Master Internal** | `X-API-Key` | `ord_master_admin_secret_99887766554433221100` | Token admin dengan akses penuh ke seluruh endpoint. |
 
 ---
 

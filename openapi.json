@@ -457,6 +457,20 @@
           "message": { "type": "string", "example": "Keterangan pesan error" }
         }
       }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Token autentikasi client frontend (Default: ord_fe_live_9a7b6c5d4e3f2a1b9876543210fedcba)"
+      },
+      "WebhookAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Webhook-Token",
+        "description": "Token otentikasi webhook payment gateway (Default: whsec_pay_8841a0e9b62c451fbcda332156890abc)"
+      }
     }
   }
 }

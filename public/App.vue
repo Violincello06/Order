@@ -331,6 +331,13 @@ const API_BASE = window.location.origin.includes('localhost') || window.location
   ? `${window.location.origin}/api/v1`
   : 'http://localhost:1323/api/v1';
 
+// Token Kunci Otentikasi Frontend
+const API_KEY = 'ord_fe_live_9a7b6c5d4e3f2a1b9876543210fedcba';
+const authHeaders = {
+  'Content-Type': 'application/json',
+  'X-API-Key': API_KEY
+};
+
 // Reactive State
 const apiConnected = ref(false);
 const loading = ref(false);
@@ -428,7 +435,7 @@ const getStatusIcon = (status) => {
 const fetchOrders = async () => {
   loading.value = true;
   try {
-    const res = await fetch(`${API_BASE}/orders`);
+    const res = await fetch(`${API_BASE}/orders`, { headers: authHeaders });
     if (!res.ok) throw new Error('Status: ' + res.status);
     const json = await res.json();
     orders.value = json.data || [];
@@ -481,7 +488,7 @@ const handleCreateOrder = async () => {
   try {
     const res = await fetch(`${API_BASE}/orders`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({
         customer_name: form.customer_name,
         customer_email: form.customer_email,
@@ -509,7 +516,10 @@ const handleCreateOrder = async () => {
 // Simulate Payment
 const simulatePayment = async (orderId) => {
   try {
-    const res = await fetch(`${API_BASE}/orders/${orderId}/pay`, { method: 'POST' });
+    const res = await fetch(`${API_BASE}/orders/${orderId}/pay`, {
+      method: 'POST',
+      headers: authHeaders
+    });
     const json = await res.json();
     if (!res.ok || !json.success) throw new Error(json.message || 'Gagal simulasi bayar');
     triggerToast(`Order ${orderId} berhasil dibayar!`);
@@ -529,7 +539,10 @@ const simulatePayment = async (orderId) => {
 const cancelOrder = async (orderId) => {
   if (!confirm(`Batalkan pesanan ${orderId}?`)) return;
   try {
-    const res = await fetch(`${API_BASE}/orders/${orderId}/cancel`, { method: 'PUT' });
+    const res = await fetch(`${API_BASE}/orders/${orderId}/cancel`, {
+      method: 'PUT',
+      headers: authHeaders
+    });
     const json = await res.json();
     if (!res.ok || !json.success) throw new Error(json.message || 'Gagal membatalkan order');
     triggerToast(`Order ${orderId} telah dibatalkan`);

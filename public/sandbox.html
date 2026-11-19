@@ -208,7 +208,10 @@
 
         const res = await fetch('/api/v1/payments/webhook', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Webhook-Token': 'whsec_pay_8841a0e9b62c451fbcda332156890abc'
+          },
           body: JSON.stringify(payload)
         });
 

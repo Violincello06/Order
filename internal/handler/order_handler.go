@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	customMiddleware "order/internal/middleware"
 	"order/internal/models"
 	"order/internal/repository"
 	"order/internal/service"
@@ -24,16 +25,16 @@ func NewOrderHandler(orderService service.OrderService) *OrderHandler {
 func (h *OrderHandler) RegisterRoutes(e *echo.Echo) {
 	api := e.Group("/api/v1")
 
-	// Endpoint Manajemen Order
-	orders := api.Group("/orders")
+	// Endpoint Manajemen Order (Diproteksi Token API Frontend)
+	orders := api.Group("/orders", customMiddleware.RequireFrontendAuth())
 	orders.POST("", h.CreateOrder)
 	orders.GET("", h.GetAllOrders)
 	orders.GET("/:id", h.GetOrderByID)
 	orders.PUT("/:id/cancel", h.CancelOrder)
 	orders.POST("/:id/pay", h.SimulatePayment) // Endpoint pembantu simulasi pembayaran
 
-	// Endpoint Webhook Payment Gateway
-	api.POST("/payments/webhook", h.HandlePaymentWebhook)
+	// Endpoint Webhook Payment Gateway (Diproteksi Token Rahasia Webhook)
+	api.POST("/payments/webhook", h.HandlePaymentWebhook, customMiddleware.RequireWebhookAuth())
 }
 
 // CreateOrder handler untuk membuat pesanan baru

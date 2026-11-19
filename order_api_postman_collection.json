@@ -2,13 +2,23 @@
   "info": {
     "_postman_id": "a9c043e1-7d12-4f76-88ab-8c92a912e734",
     "name": "Order Management Service API",
-    "description": "Koleksi API Order Management (Golang Echo) yang terhubung dengan Product Service & Payment Gateway.\n\nFile ini siap di-import langsung ke Postman oleh tim Frontend & QA.",
+    "description": "Koleksi API Order Management (Golang Echo) yang terhubung dengan Product Service & Payment Gateway.\n\nDilengkapi Token Autentikasi untuk Tim Frontend & Tim Payment.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
       "value": "http://localhost:1323",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "ord_fe_live_9a7b6c5d4e3f2a1b9876543210fedcba",
+      "type": "string"
+    },
+    {
+      "key": "webhook_token",
+      "value": "whsec_pay_8841a0e9b62c451fbcda332156890abc",
       "type": "string"
     },
     {
@@ -37,7 +47,7 @@
       ]
     },
     {
-      "name": "1. Orders",
+      "name": "1. Orders (Frontend Auth: X-API-Key)",
       "item": [
         {
           "name": "Create Order (Buat Pesanan Baru)",
@@ -62,6 +72,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
               }
             ],
             "body": {
@@ -80,7 +94,12 @@
           "name": "Get All Orders (Ambil Semua Pesanan)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/orders",
               "host": ["{{base_url}}"],
@@ -93,7 +112,12 @@
           "name": "Get Order by ID (Detail Pesanan)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/orders/{{order_id}}",
               "host": ["{{base_url}}"],
@@ -106,7 +130,12 @@
           "name": "Cancel Order (Batalkan Pesanan)",
           "request": {
             "method": "PUT",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/orders/{{order_id}}/cancel",
               "host": ["{{base_url}}"],
@@ -119,7 +148,12 @@
           "name": "Simulate Payment Success (Simulasi Bayar)",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/orders/{{order_id}}/pay",
               "host": ["{{base_url}}"],
@@ -131,7 +165,7 @@
       ]
     },
     {
-      "name": "2. Payments & Webhook",
+      "name": "2. Payments & Webhook (Webhook Auth: X-Webhook-Token)",
       "item": [
         {
           "name": "Payment Gateway Webhook Callback",
@@ -141,6 +175,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "X-Webhook-Token",
+                "value": "{{webhook_token}}"
               }
             ],
             "body": {
@@ -152,7 +190,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "payments", "webhook"]
             },
-            "description": "Menerima notifikasi dari Payment Gateway (settlement/success -> PAID, expire/failed -> CANCELLED)."
+            "description": "Menerima notifikasi dari Payment Gateway (settlement/success -> PAID, expire/failed -> CANCELLED). Diproteksi dengan X-Webhook-Token."
           }
         }
       ]
