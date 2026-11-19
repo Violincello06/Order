@@ -28,6 +28,50 @@ func NewOrderRepositoryAutoDetect(user, pass, host, port, dbname string) (OrderR
 	return NewMemoryOrderRepository(), fmt.Sprintf("In-Memory Mock (MySQL offline: %v)", err)
 }
 
+// createTablesIfNotExist memastikan tabel orders dan order_items sudah tersedia
+func createTablesIfNotExist(db *sql.DB) error {
+	ordersTable := `
+	CREATE TABLE IF NOT EXISTS orders (
+		id VARCHAR(64) PRIMARY KEY,
+		customer_name VARCHAR(150) NOT NULL,
+		customer_email VARCHAR(150) NOT NULL,
+		total_amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+		status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+		payment_id VARCHAR(100) NULL,
+		payment_url VARCHAR(500) NULL,
+		payment_status VARCHAR(50) NULL,
+		payment_method VARCHAR(50) NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+		INDEX idx_orders_status (status),
+		INDEX idx_orders_customer_email (customer_email),
+		INDEX idx_orders_created_at (created_at)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+	`
+	orderItemsTable := `
+	CREATE TABLE IF NOT EXISTS order_items (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		order_id VARCHAR(64) NOT NULL,
+		product_id VARCHAR(64) NOT NULL,
+		product_name VARCHAR(255) NOT NULL,
+		price DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+		quantity INT NOT NULL DEFAULT 1,
+		subtotal DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+		image_url VARCHAR(500) NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		INDEX idx_order_items_order_id (order_id),
+		INDEX idx_order_items_product_id (product_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+	`
+	if _, err := db.Exec(ordersTable); err != nil {
+		return err
+	}
+	if _, err := db.Exec(orderItemsTable); err != nil {
+		return err
+	}
+	return nil
+}
+
 // InitMySQLConnection membuka koneksi ke MySQL XAMPP
 func InitMySQLConnection(user, pass, host, port, dbname string) (*sql.DB, error) {
 	if host == "" {
@@ -57,9 +101,21 @@ func InitMySQLConnection(user, pass, host, port, dbname string) (*sql.DB, error)
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
+		// Jika koneksi langsung ke db gagal (misal belum dibuat), coba buat otomatis via MySQL server
+		serverDsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/?parseTime=true&loc=Local", user, pass, host, port)
+		serverDB, sErr := sql.Open("mysql", serverDsn)
+		if sErr == nil {
+			defer serverDB.Close()
+			_, _ = serverDB.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", dbname))
+			if retryErr := db.PingContext(ctx); retryErr == nil {
+				_ = createTablesIfNotExist(db)
+				return db, nil
+			}
+		}
 		return nil, err
 	}
 
+	_ = createTablesIfNotExist(db)
 	return db, nil
 }
 
