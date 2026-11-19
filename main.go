@@ -44,9 +44,11 @@ func main() {
 	// - HTTP Handlers
 	orderHandler := handler.NewOrderHandler(orderService)
 
-	// 4. Layani Web UI Frontend
+	// 4. Layani Web UI Frontend & API Documentation
 	e.File("/", "public/index.html")
 	e.File("/dashboard", "public/index.html")
+	e.File("/docs", "public/docs.html")
+	e.File("/openapi.json", "openapi.json")
 	e.Static("/public", "public")
 
 	// Health check & Info API
@@ -56,6 +58,8 @@ func main() {
 			Message: "Order Management Service API is running",
 			Data: map[string]interface{}{
 				"version": "1.0.0",
+				"docs_url": "/docs",
+				"openapi_spec": "/openapi.json",
 				"endpoints": []string{
 					"POST   /api/v1/orders           (Buat order baru)",
 					"GET    /api/v1/orders           (Ambil daftar order)",

@@ -37,7 +37,19 @@ go run main.go
 
 Buka browser Anda dan akses:
 - **Tampilan Visual Web Dashboard:** `http://localhost:1323/` atau `http://localhost:1323/dashboard`
+- **Interactive Swagger API Docs (Untuk Tim Frontend):** `http://localhost:1323/docs`
+- **Spesifikasi OpenAPI JSON:** `http://localhost:1323/openapi.json`
 - **Info API JSON:** `http://localhost:1323/api/info`
+
+---
+
+## 📦 File Spesifikasi API untuk Diberikan ke Tim Lain
+
+Di dalam root project ini telah disediakan 2 format standar industri:
+1. **[openapi.json](file:///c:/xampp/htdocs/Order/openapi.json)** (OpenAPI / Swagger 3.0 Standard)
+   - Format universal untuk generator kode (TypeScript, Axios, Flutter, Android/iOS) dan Swagger Editor.
+2. **[order_api_postman_collection.json](file:///c:/xampp/htdocs/Order/order_api_postman_collection.json)** (Postman Collection v2.1)
+   - Tim frontend / QA cukup klik **Import** di Postman dan semua request beserta contoh JSON body langsung siap diuji coba.
 
 ---
 

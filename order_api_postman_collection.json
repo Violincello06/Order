@@ -1,0 +1,161 @@
+{
+  "info": {
+    "_postman_id": "a9c043e1-7d12-4f76-88ab-8c92a912e734",
+    "name": "Order Management Service API",
+    "description": "Koleksi API Order Management (Golang Echo) yang terhubung dengan Product Service & Payment Gateway.\n\nFile ini siap di-import langsung ke Postman oleh tim Frontend & QA.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:1323",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "ORD-20261119-9B4F81",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. System",
+      "item": [
+        {
+          "name": "Check Health / Info API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "info"]
+            },
+            "description": "Mengecek apakah server backend Echo sedang aktif."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Orders",
+      "item": [
+        {
+          "name": "Create Order (Buat Pesanan Baru)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('order_id', jsonData.data.id);",
+                  "    console.log('Saved order_id:', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Budi Santoso\",\n  \"customer_email\": \"budi@example.com\",\n  \"items\": [\n    {\n      \"product_id\": \"PROD-001\",\n      \"quantity\": 2\n    },\n    {\n      \"product_id\": \"PROD-002\",\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders"]
+            },
+            "description": "Memvalidasi stok & harga ke Product API, membuat order, dan menginisiasi tagihan ke Payment Gateway. Mengembalikan data order beserta payment_url."
+          }
+        },
+        {
+          "name": "Get All Orders (Ambil Semua Pesanan)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders"]
+            },
+            "description": "Mengambil semua daftar pesanan yang tersimpan."
+          }
+        },
+        {
+          "name": "Get Order by ID (Detail Pesanan)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "{{order_id}}"]
+            },
+            "description": "Mengambil informasi detail pesanan berdasarkan ID."
+          }
+        },
+        {
+          "name": "Cancel Order (Batalkan Pesanan)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "{{order_id}}", "cancel"]
+            },
+            "description": "Membatalkan pesanan yang masih berstatus PENDING."
+          }
+        },
+        {
+          "name": "Simulate Payment Success (Simulasi Bayar)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/{{order_id}}/pay",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "{{order_id}}", "pay"]
+            },
+            "description": "Shortcut testing untuk tim Frontend: mensimulasikan pembayaran lunas tanpa perlu membuka payment gateway luar."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Payments & Webhook",
+      "item": [
+        {
+          "name": "Payment Gateway Webhook Callback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"payment_id\": \"PAY-1732000000\",\n  \"transaction_status\": \"settlement\",\n  \"payment_method\": \"qris\",\n  \"gross_amount\": 195000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments", "webhook"]
+            },
+            "description": "Menerima notifikasi dari Payment Gateway (settlement/success -> PAID, expire/failed -> CANCELLED)."
+          }
+        }
+      ]
+    }
+  ]
+}

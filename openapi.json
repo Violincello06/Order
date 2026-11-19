@@ -1,0 +1,462 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Order Management Service API",
+    "description": "Spesifikasi API untuk modul Order Management yang terintegrasi dengan Product Service (validasi & stok) dan Payment Gateway (inisiasi tagihan & webhook callback).\n\nFile ini dapat diimpor langsung ke Postman, Insomnia, Swagger UI, atau alat code generator frontend (TypeScript/Axios/React Query/Flutter).",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Backend Team",
+      "email": "backend@order.local"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:1323",
+      "description": "Local Development Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Orders",
+      "description": "Operasi utama manajemen pemesanan (Order)"
+    },
+    {
+      "name": "Payments & Webhooks",
+      "description": "Integrasi Payment Gateway & notifikasi pembayaran"
+    },
+    {
+      "name": "System",
+      "description": "Pemeriksaan kesehatan & info API"
+    }
+  ],
+  "paths": {
+    "/api/info": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Cek status server & info API",
+        "description": "Mengembalikan status operasional server dan daftar ringkas endpoint.",
+        "responses": {
+          "200": {
+            "description": "Server berjalan normal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Order Management Service API is running",
+                  "data": {
+                    "version": "1.0.0"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Buat order baru (Create Order)",
+        "description": "Membuat order baru dengan memvalidasi stok dan harga dari **Product API**, menghitung total belanja, dan menginisiasi pembayaran ke **Payment Gateway**. Mengembalikan data order lengkap berserta `payment_url` untuk dialihkan ke halaman bayar.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              },
+              "example": {
+                "customer_name": "Budi Santoso",
+                "customer_email": "budi@example.com",
+                "items": [
+                  {
+                    "product_id": "PROD-001",
+                    "quantity": 2
+                  },
+                  {
+                    "product_id": "PROD-002",
+                    "quantity": 1
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order berhasil dibuat dan menunggu pembayaran",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOrder"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Order berhasil dibuat",
+                  "data": {
+                    "id": "ORD-20261119-9B4F81",
+                    "customer_name": "Budi Santoso",
+                    "customer_email": "budi@example.com",
+                    "items": [
+                      {
+                        "product_id": "PROD-001",
+                        "product_name": "Kopi Arabika 250g",
+                        "price": 75000,
+                        "quantity": 2,
+                        "subtotal": 150000
+                      },
+                      {
+                        "product_id": "PROD-002",
+                        "product_name": "Syrup Vanilla 500ml",
+                        "price": 45000,
+                        "quantity": 1,
+                        "subtotal": 45000
+                      }
+                    ],
+                    "total_amount": 195000,
+                    "status": "PENDING",
+                    "payment_id": "PAY-1732000000000",
+                    "payment_url": "https://checkout.sandbox-payment.com/pay/PAY-1732000000000",
+                    "payment_status": "PENDING",
+                    "created_at": "2026-11-19T10:45:00Z",
+                    "updated_at": "2026-11-19T10:45:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input tidak valid, produk tidak ditemukan, atau stok kurang",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseError"
+                },
+                "example": {
+                  "success": false,
+                  "message": "gagal reservasi stok untuk produk 'Kopi Arabika 250g': stok produk tidak mencukupi"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Ambil semua daftar order",
+        "description": "Mengembalikan daftar semua order yang telah dibuat.",
+        "responses": {
+          "200": {
+            "description": "Daftar order berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOrderList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Ambil detail spesifik suatu order",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID unik order (contoh: ORD-20261119-XXXX)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail order ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOrder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Order tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseError"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Order tidak ditemukan"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}/cancel": {
+      "put": {
+        "tags": ["Orders"],
+        "summary": "Batalkan order",
+        "description": "Membatalkan order yang masih berstatus PENDING. Mengubah status order menjadi CANCELLED.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID unik order yang akan dibatalkan",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order berhasil dibatalkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOrder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Order tidak dapat dibatalkan (misal: sudah PAID)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseError"
+                },
+                "example": {
+                  "success": false,
+                  "message": "order tidak dapat dibatalkan karena status saat ini: status saat ini 'PAID'"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}/pay": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Simulasi penyelesaian pembayaran",
+        "description": "Endpoint testing pembantu bagi tim frontend/QA untuk mensimulasikan order berhasil dibayar tanpa harus mengakses dashboard gateway.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID order yang akan disimulasikan pembayarannya",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pembayaran berhasil disimulasikan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOrder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/webhook": {
+      "post": {
+        "tags": ["Payments & Webhooks"],
+        "summary": "Webhook notifikasi dari Payment Gateway",
+        "description": "Endpoint yang dipanggil otomatis oleh Payment Gateway (Midtrans, Xendit, Stripe, dll.) saat status pembayaran berubah. Status order otomatis diubah menjadi `PAID` jika transaksi `settlement`/`success`, atau `CANCELLED` jika `expire`/`failed`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentWebhookRequest"
+              },
+              "example": {
+                "order_id": "ORD-20261119-9B4F81",
+                "payment_id": "PAY-1732000000000",
+                "transaction_status": "settlement",
+                "payment_method": "qris",
+                "gross_amount": 195000
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook pembayaran berhasil diproses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Webhook pembayaran berhasil diproses"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data webhook tidak valid atau order tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "OrderStatus": {
+        "type": "string",
+        "enum": ["PENDING", "PAID", "CANCELLED", "COMPLETED"],
+        "description": "Status siklus hidup pesanan"
+      },
+      "CreateOrderItemRequest": {
+        "type": "object",
+        "required": ["product_id", "quantity"],
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "ID unik produk dari katalog Product API",
+            "example": "PROD-001"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Jumlah kuantitas yang dipesan",
+            "example": 2
+          }
+        }
+      },
+      "CreateOrderRequest": {
+        "type": "object",
+        "required": ["customer_name", "customer_email", "items"],
+        "properties": {
+          "customer_name": {
+            "type": "string",
+            "description": "Nama lengkap pemesan",
+            "example": "Budi Santoso"
+          },
+          "customer_email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email pemesan untuk konfirmasi & invoice",
+            "example": "budi@example.com"
+          },
+          "items": {
+            "type": "array",
+            "description": "Daftar produk yang dibeli",
+            "items": {
+              "$ref": "#/components/schemas/CreateOrderItemRequest"
+            }
+          }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "product_id": { "type": "string", "example": "PROD-001" },
+          "product_name": { "type": "string", "example": "Kopi Arabika 250g" },
+          "price": { "type": "number", "example": 75000 },
+          "quantity": { "type": "integer", "example": 2 },
+          "subtotal": { "type": "number", "example": 150000 }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "ORD-20261119-9B4F81" },
+          "customer_name": { "type": "string", "example": "Budi Santoso" },
+          "customer_email": { "type": "string", "example": "budi@example.com" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItem" }
+          },
+          "total_amount": { "type": "number", "example": 195000 },
+          "status": { "$ref": "#/components/schemas/OrderStatus" },
+          "payment_id": { "type": "string", "example": "PAY-1732000000000" },
+          "payment_url": { "type": "string", "example": "https://checkout.sandbox-payment.com/pay/PAY-1732000000000" },
+          "payment_status": { "type": "string", "example": "PENDING" },
+          "payment_method": { "type": "string", "example": "qris" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaymentWebhookRequest": {
+        "type": "object",
+        "required": ["order_id", "transaction_status"],
+        "properties": {
+          "order_id": { "type": "string", "example": "ORD-20261119-9B4F81" },
+          "payment_id": { "type": "string", "example": "PAY-1732000000000" },
+          "transaction_status": {
+            "type": "string",
+            "description": "Status transaksi dari Payment Gateway (settlement, success, expire, failed, deny)",
+            "example": "settlement"
+          },
+          "payment_method": { "type": "string", "example": "qris" },
+          "gross_amount": { "type": "number", "example": 195000 }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Success" },
+          "data": { "type": "object" }
+        }
+      },
+      "ApiResponseOrder": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Order berhasil dibuat" },
+          "data": { "$ref": "#/components/schemas/Order" }
+        }
+      },
+      "ApiResponseOrderList": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Daftar pesanan berhasil dimuat" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Order" }
+          }
+        }
+      },
+      "ApiResponseError": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string", "example": "Keterangan pesan error" }
+        }
+      }
+    }
+  }
+}
