@@ -110,6 +110,7 @@ func main() {
 	e.File("/App.vue", "public/App.vue")
 	e.File("/docs", "public/docs.html")
 	e.File("/openapi.json", "openapi.json")
+	e.File("/panduan", "PANDUAN_INTEGRASI_FRONTEND.md")
 	e.Static("/public", "public")
 
 	// Layani Sandbox Payment Gateway Simulator Lokal
