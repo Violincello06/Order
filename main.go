@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -14,6 +16,32 @@ import (
 	"order/internal/repository"
 	"order/internal/service"
 )
+
+// loadEnv membaca file .env sederhana jika tersedia dan mengisi os.Setenv jika belum diset
+func loadEnv(filepath string) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			val := strings.TrimSpace(parts[1])
+			val = strings.Trim(val, `"'`)
+			if os.Getenv(key) == "" {
+				os.Setenv(key, val)
+			}
+		}
+	}
+}
 
 // Dynamic loader in-memory untuk me-mount App.vue langsung tanpa perlu file index.html di disk
 const vueMountPage = `<!DOCTYPE html>
@@ -51,6 +79,9 @@ const vueMountPage = `<!DOCTYPE html>
 </html>`
 
 func main() {
+	// 0. Muat konfigurasi dari file .env
+	loadEnv(".env")
+
 	// 1. Inisialisasi Echo instance
 	e := echo.New()
 
@@ -139,6 +170,10 @@ func main() {
 
 	orderHandler.RegisterRoutes(e)
 
-	// 5. Jalankan server pada port 1323
-	e.Logger.Fatal(e.Start(":1323"))
+	// 5. Jalankan server pada port yang dikonfigurasi (default: 1323)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "1323"
+	}
+	e.Logger.Fatal(e.Start(":" + port))
 }
